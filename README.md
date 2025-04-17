@@ -29,6 +29,7 @@ terraform apply
 
 Edit main.tf in the root to include:
 
+```
 module "iam" {
   source = "./iam"
 }
@@ -36,6 +37,7 @@ module "iam" {
 module "ec2" {
   source = "./ec2"
 }
+```
 
 Then:
 
