@@ -43,6 +43,15 @@ data "aws_ami" "ubuntu" {
     }
 }
 
+data "aws_iam_role" "EC2-role"{
+    name = "IamRoleEC2"
+}
+
+resource "aws_iam_instance_profile" "test"{
+    name = "Terraform_instance_profile"
+    role = data.aws_iam_role.EC2-role.name
+}
+
 resource "aws_instance" "terraform-test" {
     ami = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
@@ -58,6 +67,7 @@ resource "aws_instance" "terraform-test" {
     tags = {
         Name = "terraform-ec2"
     }
+    iam_instance_profile = aws_iam_instance_profile.test.name
 }
 
 resource "local_file" "private_key" {
