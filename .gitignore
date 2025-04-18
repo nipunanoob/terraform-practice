@@ -15,3 +15,6 @@ crash.log
 .terraform/
 .terraform.lock.hcl
 
+# ignore pem
+*.pem
+
