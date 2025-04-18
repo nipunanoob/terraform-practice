@@ -11,6 +11,7 @@ This project is a hands-on practice environment for using [Terraform](https://ww
 - [Terraform](https://developer.hashicorp.com/terraform/downloads)
 - AWS CLI configured (`aws configure`)
 - IAM user with necessary permissions (IAM, EC2, S3, etc.)
+- Creating EC2 and configuring with SG, Pvt key, IAM role
 
 ---
 
