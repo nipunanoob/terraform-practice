@@ -57,7 +57,8 @@ terraform destroy
 
 - Infrastructure as Code (IaC)
 - IAM roles and users
-- Creating EC2 and configuring with SG, Pvt key, IAM role
+- Creating EC2 and configuring with Securtity Group, Private key, IAM role, Elastic Block
+- Provisioning ALB resource with target group containing two instances
 
 ## 🔒 .gitignore Note
 
