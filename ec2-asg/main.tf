@@ -67,40 +67,27 @@ resource "aws_iam_instance_profile" "test"{
     role = data.aws_iam_role.EC2-role.name
 }
 
-resource "aws_instance" "terraform-test" {
-    ami = data.aws_ami.ubuntu.id
+resource "aws_launch_template" "terraform-launch-template" {
+    name = "terraform-launch-template"
+    image_id = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
     key_name = aws_key_pair.ec2-key.key_name
-    root_block_device {
-      delete_on_termination = true
-      volume_size = 8
-      volume_type = "gp2"
-    }
-    associate_public_ip_address = true
-    user_data = templatefile("${path.module}/ec2-user-data.sh",{})
     vpc_security_group_ids = [aws_security_group.allow_ssh_http.id]   
-    tags = {
-        Name = "first instance"
-    }
-    iam_instance_profile = aws_iam_instance_profile.test.name
+    user_data = base64encode(templatefile("${path.module}/ec2-user-data.sh",{}))
 }
 
-resource "aws_instance" "terraform-test-2" {
-    ami = data.aws_ami.ubuntu.id
-    instance_type = "t2.micro"
-    key_name = aws_key_pair.ec2-key.key_name
-    root_block_device {
-      delete_on_termination = true
-      volume_size = 8
-      volume_type = "gp2"
+resource "aws_autoscaling_group" "terraform-asg"{
+    name = "terraform-asg"
+    max_size = 1
+    min_size = 1
+    vpc_zone_identifier = ["subnet-0da8da6005a4f9511", "subnet-0ca32209e0ccd9588"]
+    target_group_arns = [aws_lb_target_group.terraform-target-group.arn]
+    health_check_type = "ELB"
+    health_check_grace_period  = 300
+
+    launch_template {
+        id = aws_launch_template.terraform-launch-template.id
     }
-    associate_public_ip_address = true
-    user_data = templatefile("${path.module}/ec2-user-data.sh",{})
-    vpc_security_group_ids = [aws_security_group.allow_ssh_http.id]   
-    tags = {
-        Name = "second instance"
-    }
-    iam_instance_profile = aws_iam_instance_profile.test.name
 }
 
 data "aws_vpc" "default" {
@@ -121,17 +108,17 @@ resource "aws_lb_target_group" "terraform-target-group"{
     vpc_id = data.aws_vpc.default.id 
 }
 
-resource "aws_lb_target_group_attachment" "attach_instance_1" {
-  target_group_arn = aws_lb_target_group.terraform-target-group.arn
-  target_id        = aws_instance.terraform-test.id
-  port             = 80
-}
+# resource "aws_lb_target_group_attachment" "attach_instance_1" {
+#   target_group_arn = aws_lb_target_group.terraform-target-group.arn
+#   target_id        = aws_instance.terraform-test.id
+#   port             = 80
+# }
 
-resource "aws_lb_target_group_attachment" "attach_instance_2" {
-  target_group_arn = aws_lb_target_group.terraform-target-group.arn
-  target_id        = aws_instance.terraform-test-2.id
-  port             = 80
-}
+# resource "aws_lb_target_group_attachment" "attach_instance_2" {
+#   target_group_arn = aws_lb_target_group.terraform-target-group.arn
+#   target_id        = aws_instance.terraform-test-2.id
+#   port             = 80
+# }
 
 
 resource "aws_lb" "terraform-elb" {
@@ -150,8 +137,8 @@ resource "aws_lb_listener" "http" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.terraform-target-group.arn
     }
-}
 
+}
 
 resource "local_file" "private_key" {
   content  = tls_private_key.ec2-key.private_key_pem
